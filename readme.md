@@ -10,6 +10,13 @@ Tool Purpose Splunk Enterprise SIEM — log collection, detection, alerting, das
 
 
 
+
+
+
+
+
+
+
  Lab Architecture
 ┌─────────────────────┐         Port 9997          ┌─────────────────────┐
 │   Windows 10 VM     │ ─────────────────────────► │    Kali Linux VM    │
@@ -18,6 +25,10 @@ Tool Purpose Splunk Enterprise SIEM — log collection, detection, alerting, das
 │  - Event Viewer     │                             │  - SIEM Dashboard   │
 │  - Forwarder Agent  │                             │  - Alert Engine     │
 └─────────────────────┘                             └─────────────────────┘
+
+
+
+
 
 
 

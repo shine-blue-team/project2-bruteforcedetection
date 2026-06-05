@@ -1,0 +1,61 @@
+-- ============================================================
+-- BRUTE FORCE DASHBOARD — PANEL QUERIES
+-- Dashboard Name: Brute Force Attack Detection - Windows 10
+-- Platform: Splunk Enterprise on Kali Linux
+-- NOTE: Replace WIN10-HOSTNAME with your actual hostname
+-- ============================================================
+
+
+-- ============================================================
+-- PANEL 1 — Failed Login Timeline (Line Chart)
+-- Visualization : Line Chart
+-- Panel Title   : Failed Login Timeline - Windows 10
+-- Purpose       : Shows failed login spike over time per minute
+-- ============================================================
+
+index=* EventCode=4625 host="DESKTOP-OAIVT6V"
+| timechart count span=5m
+| rename count as "Failed Logins"
+
+
+-- ============================================================
+-- PANEL 2 — Total Failed Logins (Single Value)
+-- Visualization : Single Value
+-- Panel Title   : Total Failed Logins - Windows 10
+-- Purpose       : Big number summary of total failed attempts
+-- ============================================================
+
+index=* EventCode=4625 host="DESKTOP-OAIVT6V"
+| stats count as "Total Failed Logins"
+
+
+-- ============================================================
+-- PANEL 3 — Brute Force Detection Results (Statistics Table)
+-- Visualization : Statistics Table
+-- Panel Title   : Brute Force Detection Results
+-- Purpose       : Shows hosts, accounts, attempt counts, risk
+-- ============================================================
+
+index=* EventCode=4625
+| bucket _time span=5m
+| stats count as FailedAttempts by _time, host, Account_Name
+| where FailedAttempts > 5
+| eval Risk=case(
+    FailedAttempts>=20,"CRITICAL",
+    FailedAttempts>=10,"HIGH",
+    FailedAttempts>5,"MEDIUM")
+| table _time, host, Account_Name, FailedAttempts, Risk
+| sort -FailedAttempts
+
+
+-- ============================================================
+-- PANEL 4 — Failed vs Successful Logins (Bar Chart)
+-- Visualization : Bar Chart
+-- Panel Title   : Login Activity - Windows 10
+-- Purpose       : Compare failed vs successful login counts
+--                 to check for post-brute-force compromise
+-- ============================================================
+
+index=* (EventCode=4624 OR EventCode=4625) host="DESKTOP-OAIVT6V"
+| eval LoginType=if(EventCode="4624","Successful","Failed")
+| stats count by LoginType

@@ -1,10 +1,12 @@
 INCIDENT REPORT
+
 Field    Value 
 Title    Brute Force Login Attack — Windows 10 Endpoint
 Date     [04.06.2026]
 Severity  High
 Analyst   [jason]
 StatusClosed — Simulation Confirmed
+
 
 Summary
 A brute force login attack was detected on Windows 10 machine [DESKTOP-OAIVT6V]. 20 failed login attempts (Event ID 4625) were recorded within 60 seconds against the Administrator account. The attack was detected by a Splunk SIEM real-time alert rule within 1–2 minutes of the first failed attempt. Attack was confirmed as a controlled lab simulation with no actual compromise.

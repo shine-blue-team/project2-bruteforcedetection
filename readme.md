@@ -6,6 +6,10 @@ Simulated brute force login attacks on a Windows 10 endpoint by generating repea
  
 Tool Purpose Splunk Enterprise SIEM — log collection, detection, alerting, dashboards Splunk Universal Forwarder Forwards Windows 10 Security logs to Splunk Windows 10 VMAttack target endpointKali Linux VMSplunk server (SIEM host)Windows Event ViewerVerify Event ID 4625 locallySPL (Splunk Query Language)Detection queries and dashboards
 
+
+
+
+
  Lab Architecture
 ┌─────────────────────┐         Port 9997          ┌─────────────────────┐
 │   Windows 10 VM     │ ─────────────────────────► │    Kali Linux VM    │
@@ -14,6 +18,12 @@ Tool Purpose Splunk Enterprise SIEM — log collection, detection, alerting, das
 │  - Event Viewer     │                             │  - SIEM Dashboard   │
 │  - Forwarder Agent  │                             │  - Alert Engine     │
 └─────────────────────┘                             └─────────────────────┘
+
+
+
+
+
+
 
 
 

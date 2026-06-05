@@ -1,0 +1,83 @@
+-- ============================================================
+-- BRUTE FORCE ATTACK DETECTION — SPL QUERIES
+-- Project: Brute Force Attack Detection using Splunk SIEM
+-- Platform: Splunk Enterprise on Kali Linux
+-- Log Source: Windows 10 Security Event Log (Event ID 4625)
+-- ============================================================
+
+
+-- ============================================================
+-- QUERY 1 — Confirm Failed Logins from Windows 10
+-- Purpose : Verify that brute force events arrived in Splunk
+--           from the Windows 10 endpoint
+-- Time Range: Last 15 minutes
+-- Expected : 20 rows from DESKTOP-OAIVT6V
+-- ============================================================
+
+index=* EventCode=4625
+| table _time, host, Account_Name, IpAddress, Failure_Reason
+| sort -_time
+
+
+-- ============================================================
+-- QUERY 2 — Count Failed Logins Per Machine
+-- Purpose : Show total failed login count per host and account
+--           Windows 10 machine should show count of 20
+-- Time Range: Last 15 minutes
+-- ============================================================
+
+index=* EventCode=4625
+| stats count as "Failed Logins" by host, Account_Name
+| sort -"Failed Logins"
+
+
+-- ============================================================
+-- QUERY 3 — Brute Force Detection with Risk Rating   MAIN
+-- Purpose : Groups failed logins in 5-minute windows and
+--           assigns CRITICAL / HIGH / MEDIUM risk rating
+-- Threshold: > 5 failed attempts in any 5-minute window
+-- Expected : WIN10-HOSTNAME with 20 attempts → CRITICAL
+-- ============================================================
+
+index=* EventCode=4625
+| bucket _time span=5m
+| stats count as FailedAttempts by _time, host, Account_Name
+| where FailedAttempts > 5
+| eval Risk=case(
+    FailedAttempts >= 20, "CRITICAL",
+    FailedAttempts >= 10, "HIGH",
+    FailedAttempts > 5,  "MEDIUM")
+| table _time, host, Account_Name, FailedAttempts, Risk
+| sort -FailedAttempts
+
+
+-- ============================================================
+-- QUERY 4 — Check if Attacker Succeeded After Brute Force
+-- Purpose : Most critical query — did attacker get in?
+--           Correlates failed logins (4625) with successful
+--           logins (4624) for the same account
+-- Expected : No rows (no compromise in simulation)
+-- ============================================================
+
+index=* (EventCode=4625 OR EventCode=4624)
+| eval LoginType=case(
+    EventCode="4625", "Failed",
+    EventCode="4624", "Success")
+| stats count(eval(LoginType="Failed")) as Failures,
+        count(eval(LoginType="Success")) as Successes
+        by host, Account_Name
+| where Failures > 5 AND Successes > 0
+| eval Status="COMPROMISED - Investigate Immediately"
+| table host, Account_Name, Failures, Successes, Status
+
+
+-- ============================================================
+-- QUERY 5 — Failed Login Timeline (Attack Spike View)
+-- Purpose : Shows exact timestamps of failed logins per minute
+--           Visualise as Line Chart to see the attack spike
+-- NOTE    : Replace WIN10-HOSTNAME with your actual hostname
+-- ============================================================
+
+index=* EventCode=4625 host="DESKTOP-OAIVT6V"
+| timechart count span=1m
+| rename count as "Failed Logins per Minute"
